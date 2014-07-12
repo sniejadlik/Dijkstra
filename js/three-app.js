@@ -110,6 +110,64 @@
 	};
 
 
+	/* 
+	 * Dijkstra 
+	 */
+
+	 function Dijkstra(vertices) {
+	 	this.Inf = Number.POSITIVE_INFINITY;
+	 	this.vertices = vertices;
+	 	this.pq = new PriorityQueue();
+	 }
+
+	 Dijkstra.prototype.shortestPath = function (source, target) {
+	 	// Initialize
+	 	var path = [],
+	 		i, ilen;
+
+	 	for (i=0, ilen = this.vertices.length; i<ilen; i++) {
+	 		var v = this.vertices[i];
+	 		if (v === source) {
+	 			v.cost = 0;
+	 			this.pq.enqueue(v, 0);
+	 		} else {
+	 			v.cost = this.Inf;
+	 			this.pq.enqueue(v, this.Inf);
+	 		}
+	 		v.predecessor = null;
+	 	}
+
+	 	// Main
+	 	while ( !this.pq.isEmpty() ) {
+	 		var primary = this.pq.dequeue();
+
+	 		if (primary === target) {
+	 			while (primary.predecessor !== null) {
+	 				path.push(primary);
+	 				primary = primary.predecessor;
+	 			}
+	 			break;
+	 		}
+
+	 		for (i=0, ilen=primary.edges.length; i<ilen; i++) {
+	 			var n = primary.edges[i].neighbor;
+	 			var tempCost = primary.cost + n.distance;
+	 			if (tempCost < n.cost) {
+	 				n.cost = tempCost;
+	 				n.predecessor = primary;
+	 				this.pq.enqueue(n, tempCost);
+	 			}
+	 		}
+	 	}
+	 	return path;
+
+	 }
+
+
+
+
+
+
 
 
 	(function run() {
