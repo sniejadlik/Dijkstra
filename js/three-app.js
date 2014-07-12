@@ -74,6 +74,44 @@
 
 
 
+
+	function PriorityQueue() {
+		this._elements = [];
+	}
+
+	PriorityQueue.prototype.enqueue = function (elem, priority) {
+		var existingElem = this.isExists(elem);
+		if (existingElem) {
+			this._elements[existingElem].priority = priority;
+		} else {
+			this._elements.push({element: elem, priority: priority});
+		}
+		this.sort();
+	};
+
+	PriorityQueue.prototype.dequeue = function () {
+		return this._elements.shift().element;
+	};
+
+	PriorityQueue.prototype.sort = function () {
+		this._elements.sort(function (a, b) {
+			return a.priority - b.priority;
+		});
+	};
+
+	PriorityQueue.prototype.isExists = function (elem) {
+		for (var i=0; i<this._elements.length; i++)
+			if (this._elements[i].element === elem) return i;
+		return false;
+	};
+
+	PriorityQueue.prototype.isEmpty = function () {
+		return !this._elements.length;
+	};
+
+
+
+
 	(function run() {
 
 		requestAnimationFrame(run);
