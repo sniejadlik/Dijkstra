@@ -35,7 +35,7 @@
 		scene.add(grid);
 
 		var axisHelper = new THREE.AxisHelper(50);
-		scene.add(axisHelper);
+		// scene.add(axisHelper);
 
 	// Lights
 		// top right
@@ -59,17 +59,21 @@
 
 	
 
-	line(new Vec3(), new Vec3(100, 100, 0));
 	
 
-	function line(v1, v2, cl) {
-		var material = new THREE.LineBasicMaterial( {color: cl || 0xffffff} );
-		var geometry = new THREE.Geometry();
-		geometry.vertices.push(v1);
-		geometry.vertices.push(v2);
-		var l = new THREE.Line(geometry, material);
-		scene.add(l);
+	function Line(v1, v2, cl) {
+		this.material = new THREE.LineBasicMaterial( {color: cl || 0xffffff} );
+		this.geometry = new THREE.Geometry();
+		this.geometry.vertices.push(v1);
+		this.geometry.vertices.push(v2);
+		this.l = new THREE.Line(this.geometry, this.material);
+		scene.add(this.l);
+		return this;
 	}
+
+	Line.prototype.setColor = function (hex) {
+		this.material.color.setHex(hex);
+	};
 
 
 
@@ -114,59 +118,126 @@
 	 * Dijkstra 
 	 */
 
-	 function Dijkstra(vertices) {
-	 	this.Inf = Number.POSITIVE_INFINITY;
-	 	this.vertices = vertices;
-	 	this.pq = new PriorityQueue();
-	 }
+	function Dijkstra(vertices) {
+		this.Inf = Number.POSITIVE_INFINITY;
+		this.vertices = vertices;
+		this.pq = new PriorityQueue();
+	}
 
-	 Dijkstra.prototype.shortestPath = function (source, target) {
-	 	// Initialize
-	 	var path = [],
-	 		i, ilen;
+	Dijkstra.prototype.shortestPath = function (source, target) {
+		// Initialize
+		var path = [],
+			i, ilen;
 
-	 	for (i=0, ilen = this.vertices.length; i<ilen; i++) {
-	 		var v = this.vertices[i];
-	 		if (v === source) {
-	 			v.cost = 0;
-	 			this.pq.enqueue(v, 0);
-	 		} else {
-	 			v.cost = this.Inf;
-	 			this.pq.enqueue(v, this.Inf);
-	 		}
-	 		v.predecessor = null;
-	 	}
+		for (i=0, ilen = this.vertices.length; i<ilen; i++) {
+			var v = this.vertices[i];
+			if (v === source) {
+				v.cost = 0;
+				this.pq.enqueue(v, 0);
+				console.log('source', i);
+			} else {
+				v.cost = this.Inf;
+				this.pq.enqueue(v, this.Inf);
+			}
+			v.predecessor = null;
+		}
 
-	 	// Main
-	 	while ( !this.pq.isEmpty() ) {
-	 		var primary = this.pq.dequeue();
+		// Main
+		while ( !this.pq.isEmpty() ) {
+			var primary = this.pq.dequeue();
 
-	 		if (primary === target) {
-	 			while (primary.predecessor !== null) {
-	 				path.push(primary);
-	 				primary = primary.predecessor;
-	 			}
-	 			break;
-	 		}
+			if (primary === target) {
+				while (primary.predecessor !== null) {
+					path.push(primary);
+					primary = primary.predecessor;
+				}
+				break;
+			}
 
-	 		for (i=0, ilen=primary.edges.length; i<ilen; i++) {
-	 			var n = primary.edges[i].neighbor;
-	 			var tempCost = primary.cost + n.distance;
-	 			if (tempCost < n.cost) {
-	 				n.cost = tempCost;
-	 				n.predecessor = primary;
-	 				this.pq.enqueue(n, tempCost);
-	 			}
-	 		}
-	 	}
-	 	return path;
+			for (i=0, ilen=primary.edges.length; i<ilen; i++) {
+				var n = primary.edges[i].getNeighbor(primary.edges[i]);
+				var edgeDist = primary.edges[i].distance;
+				var tempCost = primary.cost + edgeDist;
+				if (tempCost < n.cost) {
+					n.cost = tempCost;
+					n.predecessor = primary;
+					this.pq.enqueue(n, tempCost);
+				}
+			}
+		}
+		return path;
 
-	 }
-
-
-
+	};
 
 
+
+	function Node(pos) {
+		THREE.Vector3.call(this, pos.x, pos.y, pos.z);
+		this.geometry = new THREE.SphereGeometry( 2, 32, 32 );
+		this.material = new THREE.MeshBasicMaterial( {color: 0x00ffff} );
+		this.sphere = new THREE.Mesh( this.geometry, this.material );
+		this.sphere.position = this;
+		scene.add( this.sphere );
+
+		this.edges = [];
+	}
+
+	Node.prototype = Object.create(THREE.Vector3.prototype);
+
+	Node.prototype.setColor = function (hex) {
+		this.material.color.setHex(hex);
+	};
+
+
+	function Edge(nodeA, nodeB) {
+		this.nodeA = nodeA;
+		this.nodeB = nodeB;
+		nodeA.edges.push(this);
+		nodeB.edges.push(this);
+		this.line = new Line(nodeA, nodeB);
+		this.distance = null;
+	}
+
+	Edge.prototype.getNeighbor = function (node) {
+		return (node === this.nodeA) ? this.nodeB : this.nodeA;
+	};
+
+
+	var allNodes = [];
+	var allEdges = [];
+	for (var i=0; i<20; i++) {
+		var n = new Node( new Vec3(THREE.Math.randFloatSpread(400), THREE.Math.randFloatSpread(400), THREE.Math.randFloatSpread(400)) );
+		allNodes.push(n);
+	}
+
+
+	var nSource = new Node(new Vec3(-250, 0, 0));
+	var nTarget	= new Node(new Vec3(250, 0, 0));
+	nSource.setColor(0x00ff00);
+	nTarget.setColor(0xff0000);
+	allNodes.push(nSource);
+	allNodes.push(nTarget);
+
+
+	for (var ii=0; ii<allNodes.length; ii++) {
+		var na = allNodes[ii];
+		for (var kk=ii+1; kk<allNodes.length; kk++) {
+			var nb = allNodes[kk];
+			var dist = na.distanceTo(nb);
+			if ( dist < 300 && na.edges.length < 3 && nb.edges.length < 3) {
+				var e = new Edge(na, nb);
+				e.distance = dist;
+				allEdges.push(e);
+			}
+		}
+	}
+
+
+
+	var dijk = new Dijkstra(allNodes);
+	var spath = dijk.shortestPath(nSource, nTarget);
+	console.log(spath);
+	console.log(dijk);
 
 
 
