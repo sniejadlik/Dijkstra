@@ -75,6 +75,11 @@
 		this.material.color.setHex(hex);
 	};
 
+	Line.prototype.setOpacity = function (opacity) {
+		this.material.transparent = true;
+		this.material.opacity = opacity;
+	};
+
 
 
 
@@ -208,6 +213,7 @@
 		nodeA.edges.push(this);
 		nodeB.edges.push(this);
 		this.line = new Line(nodeA, nodeB);
+		this.setOpacity(0.25);
 		this.distance = null;
 	}
 
@@ -219,6 +225,10 @@
 		this.line.setColor(hex);
 	};
 
+	Edge.prototype.setOpacity = function (opacity) {
+		this.line.setOpacity(opacity);
+	};
+
 
 	var allNodes = [];
 	var allEdges = [];
@@ -228,8 +238,8 @@
 	}
 
 
-	var nSource = new Node(new Vec3(-250, 0, 0));
-	var nTarget	= new Node(new Vec3(250, 0, 0));
+	var nSource = new Node(new Vec3(-200, 0, 0));
+	var nTarget	= new Node(new Vec3(200, 0, 0));
 	nSource.setColor(0x00ff00);
 	nTarget.setColor(0xff0000);
 	allNodes.push(nSource);
@@ -241,7 +251,7 @@
 		for (var kk=ii+1; kk<allNodes.length; kk++) {
 			var nb = allNodes[kk];
 			var dist = na.distanceTo(nb);
-			if ( dist < 300 && na.edges.length < 4 && nb.edges.length < 4) {
+			if ( dist < 250 && na.edges.length < 6 && nb.edges.length < 6) {
 				var e = new Edge(na, nb);
 				e.distance = dist;
 				allEdges.push(e);
@@ -273,7 +283,10 @@
 		for (var m=k+1; m<spath.length; m++) {
 			var n2 = spath[m];
 			var edge = n1.getEdge(n2);
-			if (edge) edge.setColor(0xff00ff);
+			if (edge) {
+				edge.setColor(0xff00ff);
+				edge.line.setOpacity(1.0);
+			}
 		}
 	}
 
