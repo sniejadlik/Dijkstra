@@ -122,50 +122,55 @@
 		this.Inf = Number.POSITIVE_INFINITY;
 		this.vertices = vertices;
 		this.pq = new PriorityQueue();
+		this.path = [];
 	}
 
 	Dijkstra.prototype.shortestPath = function (source, target) {
 		// Initialize
-		var path = [],
-			i, ilen;
+		var i, ilen;
 
 		for (i=0, ilen = this.vertices.length; i<ilen; i++) {
 			var v = this.vertices[i];
 			if (v === source) {
 				v.cost = 0;
 				this.pq.enqueue(v, 0);
-				console.log('source', i);
 			} else {
 				v.cost = this.Inf;
 				this.pq.enqueue(v, this.Inf);
 			}
 			v.predecessor = null;
+			v.done = false;
 		}
 
 		// Main
 		while ( !this.pq.isEmpty() ) {
 			var primary = this.pq.dequeue();
+			primary.done = true;
 
 			if (primary === target) {
 				while (primary.predecessor !== null) {
-					path.push(primary);
+					this.path.push(primary);
 					primary = primary.predecessor;
 				}
 				break;
 			}
 
+			if (primary.cost === this.Inf) continue;
+
 			for (i=0, ilen=primary.edges.length; i<ilen; i++) {
-				var n = primary.edges[i].getNeighbor(primary.edges[i]);
+				var n = primary.edges[i].getNeighbor(primary);
+				if (n.done) continue;
 				var edgeDist = primary.edges[i].distance;
 				var tempCost = primary.cost + edgeDist;
 				if (tempCost < n.cost) {
+					console.log(tempCost);
 					n.cost = tempCost;
 					n.predecessor = primary;
 					this.pq.enqueue(n, tempCost);
 				}
 			}
 		}
-		return path;
+		return this.path;
 
 	};
 
@@ -236,8 +241,16 @@
 
 	var dijk = new Dijkstra(allNodes);
 	var spath = dijk.shortestPath(nSource, nTarget);
+	spath.reverse();
 	console.log(spath);
 	console.log(dijk);
+
+	for (var nn=0; nn<spath.length; nn++) {
+		var node = spath[nn];
+		if (nn !== spath.length-1) {
+			node.setColor(0xffff00);
+		}
+	}
 
 
 
