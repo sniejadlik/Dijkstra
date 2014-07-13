@@ -163,7 +163,6 @@
 				var edgeDist = primary.edges[i].distance;
 				var tempCost = primary.cost + edgeDist;
 				if (tempCost < n.cost) {
-					console.log(tempCost);
 					n.cost = tempCost;
 					n.predecessor = primary;
 					this.pq.enqueue(n, tempCost);
@@ -193,6 +192,15 @@
 		this.material.color.setHex(hex);
 	};
 
+	Node.prototype.getEdge = function (node) {
+		for (var i=0; i<this.edges.length; i++) {
+			var nb = this.edges[i].getNeighbor(this);
+			if ( nb === node) {
+				return this.edges[i];
+			}
+		}
+	};
+
 
 	function Edge(nodeA, nodeB) {
 		this.nodeA = nodeA;
@@ -207,10 +215,14 @@
 		return (node === this.nodeA) ? this.nodeB : this.nodeA;
 	};
 
+	Edge.prototype.setColor = function (hex) {
+		this.line.setColor(hex);
+	};
+
 
 	var allNodes = [];
 	var allEdges = [];
-	for (var i=0; i<20; i++) {
+	for (var i=0; i<30; i++) {
 		var n = new Node( new Vec3(THREE.Math.randFloatSpread(400), THREE.Math.randFloatSpread(400), THREE.Math.randFloatSpread(400)) );
 		allNodes.push(n);
 	}
@@ -229,7 +241,7 @@
 		for (var kk=ii+1; kk<allNodes.length; kk++) {
 			var nb = allNodes[kk];
 			var dist = na.distanceTo(nb);
-			if ( dist < 300 && na.edges.length < 3 && nb.edges.length < 3) {
+			if ( dist < 300 && na.edges.length < 4 && nb.edges.length < 4) {
 				var e = new Edge(na, nb);
 				e.distance = dist;
 				allEdges.push(e);
@@ -241,16 +253,32 @@
 
 	var dijk = new Dijkstra(allNodes);
 	var spath = dijk.shortestPath(nSource, nTarget);
+	spath.push(nSource);
 	spath.reverse();
+
 	console.log(spath);
 	console.log(dijk);
 
-	for (var nn=0; nn<spath.length; nn++) {
+	// coloring nodes
+	for (var nn=1; nn<spath.length; nn++) {	// nn=1 skip source
 		var node = spath[nn];
-		if (nn !== spath.length-1) {
+		if (nn !== spath.length-1) {	// skip target
 			node.setColor(0xffff00);
 		}
 	}
+
+	// coloring edges
+	for (var k=0; k<spath.length; k++) {
+		var n1 = spath[k];
+		for (var m=k+1; m<spath.length; m++) {
+			var n2 = spath[m];
+			var edge = n1.getEdge(n2);
+			if (edge) edge.setColor(0xff00ff);
+		}
+	}
+
+	// var ee = nSource.getEdge(spath[0]);
+	// ee.setColor(0xff00ff);
 
 
 
