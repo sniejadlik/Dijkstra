@@ -57,9 +57,6 @@
 		bgColor: 0x111113
 	};
 
-	
-
-	
 
 	function Line(v1, v2, cl) {
 		this.material = new THREE.LineBasicMaterial( {color: cl || 0xffffff} );
