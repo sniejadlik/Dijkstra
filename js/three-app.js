@@ -121,7 +121,6 @@
 	 */
 
 	function Dijkstra(vertices) {
-		this.Inf = Number.POSITIVE_INFINITY;
 		this.vertices = vertices;
 		this.pq = new PriorityQueue();
 		this.path = [];
@@ -129,6 +128,8 @@
 
 	Dijkstra.prototype.shortestPath = function (source, target) {
 		// Initialize
+		
+		var INFINITY = Number.POSITIVE_INFINITY;
 		var i, ilen;
 
 		for (i=0, ilen = this.vertices.length; i<ilen; i++) {
@@ -137,8 +138,8 @@
 				v.cost = 0;
 				this.pq.enqueue(v, 0);
 			} else {
-				v.cost = this.Inf;
-				this.pq.enqueue(v, this.Inf);
+				v.cost = INFINITY;
+				this.pq.enqueue(v, INFINITY);
 			}
 			v.predecessor = null;
 			v.done = false;
@@ -157,7 +158,7 @@
 				break;
 			}
 
-			if (primary.cost === this.Inf) continue;
+			if (primary.cost === INFINITY || !primary) continue;
 
 			for (i=0, ilen=primary.edges.length; i<ilen; i++) {
 				var n = primary.edges[i].getNeighbor(primary);
@@ -179,7 +180,7 @@
 
 	function Node(pos) {
 		THREE.Vector3.call(this, pos.x, pos.y, pos.z);
-		this.geometry = new THREE.SphereGeometry( 2, 32, 32 );
+		this.geometry = new THREE.SphereGeometry( 1.5, 32, 32 );
 		this.material = new THREE.MeshBasicMaterial( {color: 0x00ffff} );
 		this.sphere = new THREE.Mesh( this.geometry, this.material );
 		this.sphere.position = this;
@@ -229,14 +230,14 @@
 
 	var allNodes = [];
 	var allEdges = [];
-	for (var i=0; i<30; i++) {
+	for (var i=0; i<250; i++) {
 		var n = new Node( new Vec3(THREE.Math.randFloatSpread(400), THREE.Math.randFloatSpread(400), THREE.Math.randFloatSpread(400)) );
 		allNodes.push(n);
 	}
 
 
-	var nSource = new Node(new Vec3(-200, 0, 0));
-	var nTarget	= new Node(new Vec3(200, 0, 0));
+	var nSource = new Node(new Vec3(-150, -150, 150));
+	var nTarget	= new Node(new Vec3(150, 150, -150));
 	nSource.setColor(0x00ff00);
 	nTarget.setColor(0xff0000);
 	allNodes.push(nSource);
@@ -248,7 +249,7 @@
 		for (var kk=ii+1; kk<allNodes.length; kk++) {
 			var nb = allNodes[kk];
 			var dist = na.distanceTo(nb);
-			if ( dist < 250 && na.edges.length < 6 && nb.edges.length < 6) {
+			if ( dist < 100 && na.edges.length < 6 && nb.edges.length < 6) {
 				var e = new Edge(na, nb);
 				e.distance = dist;
 				allEdges.push(e);
@@ -256,6 +257,8 @@
 		}
 	}
 
+	console.log('total Nodes:', allNodes.length);
+	console.log('total Edges:', allEdges.length);
 
 
 	var dijk = new Dijkstra(allNodes);
@@ -296,8 +299,6 @@
 
 		requestAnimationFrame(run);
 		renderer.setClearColor(scene_settings.bgColor, 1);
-
-
 
 		renderer.render(scene, camera);
 		stats.update();
